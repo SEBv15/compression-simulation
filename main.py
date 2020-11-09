@@ -38,5 +38,5 @@ def test_random_data(stop_after: int = 0):
 if __name__ == '__main__':
     t_0 = time.time()
     ratio, total_bytes = test_random_data(62500000) # ratio should be 8/9 since an extra element is added for the mask and barely any zero pixels should exist
-    print("Compressing {} bytes took {} seconds".format(total_bytes, time.time() - t_0))
+    print("Compressing {} bytes took {} seconds. The final ratio is {}".format(total_bytes, time.time() - t_0, ratio))
 
