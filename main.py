@@ -5,6 +5,7 @@ from functools import reduce
 import time
 import matplotlib.pyplot as plt
 import sys
+import statistics 
 
 from compression import shuffle_compress
 
@@ -52,6 +53,7 @@ def test_binary_file(filename: str, bytes_per_pixel: int = 4, width: int = 558, 
     with open(filename, mode='rb') as file: # cannot jit compile file access
         total_out = 0
         total_in = 0
+        ratios = []
         while True:
             # load a frame into memory
             bytess = file.read(bytes_per_pixel * width * height)
@@ -73,6 +75,8 @@ def test_binary_file(filename: str, bytes_per_pixel: int = 4, width: int = 558, 
             total_out += out_s
             total_in += in_s
 
+            ratios.append(in_s/out_s)
+
             #np.set_printoptions(threshold=sys.maxsize) # uncomment to print entire array
             #print(frame[0,:], frame[0,:].shape[0])
 
@@ -83,6 +87,10 @@ def test_binary_file(filename: str, bytes_per_pixel: int = 4, width: int = 558, 
             #plt.savefig("out.png")
 
             #break
+        print("mean: {}".format(statistics.mean(ratios)))
+        print("stdev: {}".format(statistics.stdev(ratios)))
+        print("min: {}".format(min(ratios)))
+        print("max: {}".format(max(ratios)))
 
 
 if __name__ == '__main__':
