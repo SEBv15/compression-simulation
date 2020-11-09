@@ -5,11 +5,11 @@ from functools import reduce
 # Takes an array of n 8-bit values and returns an array of 8 n-bit values
 @jit(nopython=True)
 def shuffle(pixels: "np.ndarray[int]") -> "np.ndarray[int]":
-    out = np.zeros(8, dtype=np.uint64) # assume 8-bit pixel data
+    out = np.zeros(8, dtype=np.uint64) # assume 8-bit pixels and generate empty array
     for i in range(0, 8):
         for j in range(0, pixels.shape[0]):
-            out[i] <<= 1
-            out[i] += pixels[j] & 2**i
+            out[i] <<= 1 # this actually doesn't work in plain python
+            out[i] += pixels[j] & 2**i # get the ith bit in every pixel and put it in the correspond output pixel
     
     return out
 
@@ -17,11 +17,17 @@ def shuffle(pixels: "np.ndarray[int]") -> "np.ndarray[int]":
 @jit(nopython=True)
 def compress(pixels: "np.ndarray[int]") -> "np.ndarray[int]":
     #mask = reduce(lambda a, b : a+b, [2**i if e > 0 else 0 for i, e in enumerate(pixels)])
+
+    # generate mask
     mask = 0
     for p in pixels:
         mask <<= 1
         mask += p > 0
+
+    # remove zero pixels
     out = pixels[np.where(pixels > 0)]
+
+    # prepend mask to pixels
     return np.concatenate((np.asarray([mask]), out))
 
 @jit(nopython=True)
@@ -36,7 +42,7 @@ def main():
 
     print("simple compression test")
     arr = np.asarray([2,0,0,3,4,5,0,5])
-    print(arr, compress(arr), bin(compress(arr)[0]))
+    print(arr, compress(arr), bin(compress(arr)[0])) # print input, output, and mask
 
 if __name__ == "__main__":
     main()
