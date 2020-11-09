@@ -4,9 +4,9 @@ from functools import reduce
 
 # Takes an array of n 8-bit values and returns an array of 8 n-bit values
 @jit(nopython=True)
-def shuffle(pixels: "np.ndarray[int]") -> "np.ndarray[int]":
-    out = np.zeros(8, dtype=np.uint64) # assume 8-bit pixels and generate empty array
-    for i in range(0, 8):
+def shuffle(pixels: "np.ndarray[int]", bits_per_pixel: int = 10) -> "np.ndarray[int]":
+    out = np.zeros(bits_per_pixel, dtype=np.uint64) # assume 8-bit pixels and generate empty array
+    for i in range(0, bits_per_pixel):
         for j in range(0, pixels.shape[0]):
             out[i] <<= 1 # this actually doesn't work in plain python
             out[i] += pixels[j] & 2**i # get the ith bit in every pixel and put it in the correspond output pixel
@@ -31,8 +31,8 @@ def compress(pixels: "np.ndarray[int]") -> "np.ndarray[int]":
     return np.concatenate((np.asarray([mask]), out))
 
 @jit(nopython=True)
-def shuffle_compress(pixels: "np.ndarray[int]"):
-    return compress(shuffle(pixels)) # not optimum, since input is 8 n-bit pixels, but the mask will only use 8 bits. When n=16 (like in test_random_data), it would make sense to pass in two shuffles together
+def shuffle_compress(pixels: "np.ndarray[int]", bits_per_pixel: int = 10):
+    return compress(shuffle(pixels, bits_per_pixel=bits_per_pixel)) # not optimum, since input is 8 n-bit pixels, but the mask will only use 8 bits. When n=16 (like in test_random_data), it would make sense to pass in two shuffles together
 
 def main():
     print("simple shuffle test")
