@@ -9,7 +9,7 @@ def shuffle(pixels: "np.ndarray[int]", bits_per_pixel: int = 10) -> "np.ndarray[
     for i in range(0, bits_per_pixel):
         for j in range(0, pixels.shape[0]):
             out[i] <<= 1 # this actually doesn't work in plain python
-            out[i] += pixels[pixels.shape[0] - j - 1] >> i & 1 # get the ith bit in every pixel and put it in the correspond output pixel
+            out[i] += ((pixels[pixels.shape[0] - j - 1]) & 2**i) != 0 # get the ith bit in every pixel and put it in the correspond output pixel
     return out
 
 # creates a mask and prepends it to the array with zeros removed

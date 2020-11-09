@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import sys
 import statistics 
 
-from compression import shuffle_compress
+from compression import shuffle_compress, shuffle
+from decompression import deshuffle_decompress, deshuffle
 
 @jit(nopython=True)
 def test_random_data(stop_after: int = 0, bits_per_pixel: int = 10):
@@ -43,7 +44,12 @@ def compress_frame(frame, pixels_per_mask: int = 16, bits_per_pixel: int = 10):
     frame = frame.ravel()
     total_out = 0
     for i in range(0, frame.shape[0] - frame.shape[0] % pixels_per_mask, pixels_per_mask):
-        compressed_size = shuffle_compress(frame[i:i+pixels_per_mask], bits_per_pixel).shape[0]*pixels_per_mask/bits_per_pixel
+
+        compressed = shuffle_compress(frame[i:i+pixels_per_mask], bits_per_pixel)
+        if not np.array_equal(deshuffle_decompress(compressed, bits_per_pixel=bits_per_pixel), frame[i:i+pixels_per_mask]):
+            raise Exception("arrays differ")
+
+        compressed_size = compressed.shape[0]*pixels_per_mask/bits_per_pixel
         total_out += compressed_size
 
     return total_out, frame.shape[0] - frame.shape[0] % pixels_per_mask
@@ -71,7 +77,7 @@ def test_binary_file(filename: str, bytes_per_pixel: int = 4, width: int = 558, 
             # comment out to compress entire picture
             frame = frame[center[1] - 64:center[1] + 64, center[0] - 64:center[0] + 64] # select 128x128 area around center
 
-            out_s, in_s = compress_frame(frame, pixels_per_mask=pixels_per_mask, bits_per_pixel=10)
+            out_s, in_s = compress_frame(frame, pixels_per_mask=pixels_per_mask, bits_per_pixel=14)
             total_out += out_s
             total_in += in_s
 

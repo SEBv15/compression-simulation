@@ -18,8 +18,8 @@ def decompress(pixels: "np.ndarray[int]", bits_per_pixel: int = 10):
     return uc
 
 @jit(nopython=True)
-def deshuffle_decompress(pixels: "np.ndarray[int]", pixels_per_compression: int = 16):
-    return deshuffle(decompress(pixels), pixels_per_compression=pixels_per_compression)
+def deshuffle_decompress(pixels: "np.ndarray[int]", pixels_per_compression: int = 16, bits_per_pixel: int = 10):
+    return deshuffle(decompress(pixels, bits_per_pixel=bits_per_pixel), pixels_per_compression=pixels_per_compression)
 
 def test_deshuffle_decompress():
     bits_per_pixel = 10
