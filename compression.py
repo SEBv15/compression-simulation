@@ -9,8 +9,7 @@ def shuffle(pixels: "np.ndarray[int]", bits_per_pixel: int = 10) -> "np.ndarray[
     for i in range(0, bits_per_pixel):
         for j in range(0, pixels.shape[0]):
             out[i] <<= 1 # this actually doesn't work in plain python
-            out[i] += pixels[j] & 2**i # get the ith bit in every pixel and put it in the correspond output pixel
-    
+            out[i] += pixels[pixels.shape[0] - j - 1] >> i & 1 # get the ith bit in every pixel and put it in the correspond output pixel
     return out
 
 # creates a mask and prepends it to the array with zeros removed
@@ -19,7 +18,7 @@ def compress(pixels: "np.ndarray[int]") -> "np.ndarray[int]":
     #mask = reduce(lambda a, b : a+b, [2**i if e > 0 else 0 for i, e in enumerate(pixels)])
 
     # generate mask
-    mask = 0
+    mask = int(0)
     for p in pixels:
         mask <<= 1
         mask += p > 0
@@ -28,7 +27,7 @@ def compress(pixels: "np.ndarray[int]") -> "np.ndarray[int]":
     out = pixels[np.where(pixels > 0)]
 
     # prepend mask to pixels
-    return np.concatenate((np.asarray([mask]), out))
+    return np.concatenate((np.asarray([mask], dtype=np.uint64), out))
 
 @jit(nopython=True)
 def shuffle_compress(pixels: "np.ndarray[int]", bits_per_pixel: int = 10):
@@ -43,6 +42,7 @@ def main():
     print("simple compression test")
     arr = np.asarray([2,0,0,3,4,5,0,5])
     print(arr, compress(arr), bin(compress(arr)[0])) # print input, output, and mask
+
 
 if __name__ == "__main__":
     main()
