@@ -29,14 +29,14 @@ def test_random_data(stop_after: int = 0):
         c += 1
     
         if c % 64 == 0: # print occasionally
-            print(str(size * i // 1000 // 1000) + " megabytes compressed")
+            print(str(i // 1000 // 1000) + " megabytes compressed")
             print(str(i) + ": ")
             print(i/o)
 
-    return i/o, size * i
+    return i/o, i
 
 if __name__ == '__main__':
     t_0 = time.time()
-    ratio, total_bytes = test_random_data(62500000) # ratio should be 8/9 since an extra element is added for the mask and barely any zero pixels should exist
+    ratio, total_bytes = test_random_data(16*62500000) # ratio should be 8/9 since an extra element is added for the mask and barely any zero pixels should exist
     print("Compressing {} bytes took {} seconds. The final ratio is {}".format(total_bytes, time.time() - t_0, ratio))
 
