@@ -75,7 +75,8 @@ def test_binary_file(filename: str, bytes_per_pixel: int = 4, width: int = 558, 
             frame = frame.reshape((height, width)) # turn into 2d array
 
             # comment out to compress entire picture
-            frame = frame[center[1] - 64:center[1] + 64, center[0] - 64:center[0] + 64] # select 128x128 area around center
+            sf = 4 # scale factor
+            frame = frame[center[1] - 64*sf:center[1] + 64*sf:sf, center[0] - 64*sf:center[0] + 64*sf:sf] # select 128x128 area around center
 
             out_s, in_s = compress_frame(frame, pixels_per_mask=pixels_per_mask, bits_per_pixel=14)
             total_out += out_s
