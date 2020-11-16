@@ -43,16 +43,34 @@ def test_random_data(stop_after: int = 0, bits_per_pixel: int = 10):
 def compress_frame(frame, pixels_per_mask: int = 16, bits_per_pixel: int = 10):
     frame = frame.ravel()
     total_out = 0
+    tot_swaps = []
+    ones = [0]*bits_per_pixel
     for i in range(0, frame.shape[0] - frame.shape[0] % pixels_per_mask, pixels_per_mask):
 
         compressed = shuffle_compress(frame[i:i+pixels_per_mask], bits_per_pixel)
         if not np.array_equal(deshuffle_decompress(compressed, bits_per_pixel=bits_per_pixel), frame[i:i+pixels_per_mask]):
             raise Exception("arrays differ")
 
-        compressed_size = compressed.shape[0]*pixels_per_mask/bits_per_pixel
+        compressed_size = (compressed.shape[0] - 1 + 10/16)*pixels_per_mask/bits_per_pixel
         total_out += compressed_size
 
-    return total_out, frame.shape[0] - frame.shape[0] % pixels_per_mask
+        swaps = 0
+        prev = 1
+        for i in range(bits_per_pixel):
+            n = compressed[0] >> (bits_per_pixel - i - 1) & 1
+            if prev != n:
+                prev = n
+                swaps += 1
+        
+        tot_swaps.append(swaps)
+
+        for i in range(bits_per_pixel):
+            if (compressed[i+1] == 2**pixels_per_mask-1):
+                ones[i] += 1
+
+
+
+    return total_out, frame.shape[0] - frame.shape[0] % pixels_per_mask, tot_swaps, ones
 
 def test_binary_file(filename: str, bytes_per_pixel: int = 4, width: int = 558, height: int = 514, pixels_per_mask: int = 16):
     center = (260, 290)
@@ -60,6 +78,8 @@ def test_binary_file(filename: str, bytes_per_pixel: int = 4, width: int = 558, 
         total_out = 0
         total_in = 0
         ratios = []
+        tot_swaps = []
+        ones = [0]*14
         while True:
             # load a frame into memory
             bytess = file.read(bytes_per_pixel * width * height)
@@ -74,13 +94,18 @@ def test_binary_file(filename: str, bytes_per_pixel: int = 4, width: int = 558, 
 
             frame = frame.reshape((height, width)) # turn into 2d array
 
-            # comment out to compress entire picture
-            sf = 4 # scale factor
+            sf = 1 # scale factor
+            # use center square frame and optionally scale
             frame = frame[center[1] - 64*sf:center[1] + 64*sf:sf, center[0] - 64*sf:center[0] + 64*sf:sf] # select 128x128 area around center
 
-            out_s, in_s = compress_frame(frame, pixels_per_mask=pixels_per_mask, bits_per_pixel=14)
+            out_s, in_s, swaps, ones_f = compress_frame(frame, pixels_per_mask=pixels_per_mask, bits_per_pixel=14)
             total_out += out_s
             total_in += in_s
+
+            tot_swaps += swaps
+
+            for key, one in enumerate(ones):
+                ones[key] += one
 
             ratios.append(in_s/out_s)
 
@@ -98,6 +123,13 @@ def test_binary_file(filename: str, bytes_per_pixel: int = 4, width: int = 558, 
         print("stdev: {}".format(statistics.stdev(ratios)))
         print("min: {}".format(min(ratios)))
         print("max: {}".format(max(ratios)))
+
+        overall_swaps = [0]*15
+        for i in range(len(tot_swaps)):
+            overall_swaps[tot_swaps[i]] += 1
+
+        print(overall_swaps)
+        print(ones)
 
 
 if __name__ == '__main__':
