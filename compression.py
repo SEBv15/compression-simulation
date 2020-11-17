@@ -7,48 +7,6 @@ from numba import uint32, uint64, boolean    # import the types
 from data import Data
 from typing import List
 
-spec = [
-    ('_use_shuffling', boolean),
-    ('_num_pixels', uint32),
-    ('_bits_per_pixel', uint32),
-    ('_method', uint32),
-]
-
-@jitclass(spec)
-class Compressor(object):
-    def __init__(self, num_pixels: int, bits_per_pixel: int, use_shuffling: bool = True, method: str = "zeromask"):
-        methods = ["zeromask", "length"]
-        if (method not in methods):
-            raise Exception("Invalid compression method")
-
-        self._use_shuffling = use_shuffling
-        self._method = methods.index(method)
-        self._num_pixels = num_pixels
-        self._bits_per_pixel = bits_per_pixel
-
-    def compress(self, pixels: List[Data]):
-        if len(pixels) != self._num_pixels:
-            raise Exception("Got invalid number of pixels")
-
-        if self._use_shuffling:
-            pixels = self.shuffle(pixels)
-
-        if self._method == 0:
-            return self.zeromask_compress(pixels)
-
-        if self._method == 1:
-            return self.length_compress(pixels)
-
-    def shuffle(self, pixels):
-        out = [Data(0, self._num_pixels)]*self._bits_per_pixel
-        return out
-
-    def zeromask_compress(self, pixels):
-        return pixels
-
-    def length_compress(self, pixels):
-        return pixels
-
 # Takes an array of n 8-bit values and returns an array of 8 n-bit values
 @jit(nopython=True)
 def shuffle(pixels: "np.ndarray[int]", bits_per_pixel: int = 10) -> "np.ndarray[int]":
